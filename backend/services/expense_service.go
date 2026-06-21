@@ -50,34 +50,49 @@ func (s *ExpenseService) GetByVehicleID(vehicleID uint) ([]models.Expense, error
 }
 
 func (s *ExpenseService) GetStatistics(vehicleID uint) (map[string]interface{}, error) {
-	expenses, err := s.GetByVehicleID(vehicleID)
-	if err != nil {
-		return nil, err
+	type StatResult struct {
+		ExpenseType string  `gorm:"column:expense_type"`
+		TotalAmount float64 `gorm:"column:total_amount"`
+		Count       int     `gorm:"column:count"`
 	}
+
+	var stats []StatResult
+	database.DB.Model(&models.Expense{}).
+		Select("expense_type, SUM(amount) as total_amount, COUNT(*) as count").
+		Where("vehicle_id = ?", vehicleID).
+		Group("expense_type").
+		Scan(&stats)
 
 	var totalAmount float64
 	var windowAmount float64
 	var expressAmount float64
 	var otherAmount float64
+	var totalCount int
 
-	for _, e := range expenses {
-		totalAmount += e.Amount
-		switch e.ExpenseType {
+	for _, s := range stats {
+		totalAmount += s.TotalAmount
+		totalCount += s.Count
+		switch models.ExpenseType(s.ExpenseType) {
 		case models.ExpenseWindow:
-			windowAmount += e.Amount
+			windowAmount = s.TotalAmount
 		case models.ExpenseExpress:
-			expressAmount += e.Amount
+			expressAmount = s.TotalAmount
 		default:
-			otherAmount += e.Amount
+			otherAmount = s.TotalAmount
 		}
 	}
+
+	var expenses []models.Expense
+	database.DB.Where("vehicle_id = ?", vehicleID).
+		Order("created_at DESC").
+		Find(&expenses)
 
 	return map[string]interface{}{
 		"total_amount":   totalAmount,
 		"window_amount":  windowAmount,
 		"express_amount": expressAmount,
 		"other_amount":   otherAmount,
-		"total_count":    len(expenses),
+		"total_count":    totalCount,
 		"expenses":       expenses,
 	}, nil
 }

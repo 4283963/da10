@@ -4,8 +4,6 @@ import (
 	"errors"
 	"transfer-tracker/database"
 	"transfer-tracker/models"
-
-	"gorm.io/gorm"
 )
 
 type VehicleService struct{}
@@ -46,16 +44,22 @@ func (s *VehicleService) CreateVehicle(vin, plateNumber, ownerName, targetCity, 
 
 func (s *VehicleService) GetByVIN(vin string) (*models.Vehicle, error) {
 	var vehicle models.Vehicle
-	if err := database.DB.Where("vin = ?", vin).
-		Preload("Nodes", func(db *gorm.DB) *gorm.DB {
-			return db.Order("id ASC")
-		}).
-		Preload("Expenses", func(db *gorm.DB) *gorm.DB {
-			return db.Order("created_at DESC")
-		}).
-		First(&vehicle).Error; err != nil {
+	if err := database.DB.Where("vin = ?", vin).First(&vehicle).Error; err != nil {
 		return nil, errors.New("未找到该车架号信息")
 	}
+
+	var nodes []models.TransferNode
+	database.DB.Where("vehicle_id = ?", vehicle.ID).
+		Order("id ASC").
+		Find(&nodes)
+	vehicle.Nodes = nodes
+
+	var expenses []models.Expense
+	database.DB.Where("vehicle_id = ?", vehicle.ID).
+		Order("created_at DESC").
+		Find(&expenses)
+	vehicle.Expenses = expenses
+
 	return &vehicle, nil
 }
 
