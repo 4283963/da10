@@ -21,9 +21,17 @@ func Setup() *gin.Engine {
 	vehicleHandler := handlers.NewVehicleHandler()
 	nodeHandler := handlers.NewTransferNodeHandler()
 	expenseHandler := handlers.NewExpenseHandler()
+	uploadHandler := handlers.NewUploadHandler()
+
+	r.Static(uploadHandler.PublicURL(), uploadHandler.UploadDir())
 
 	api := r.Group("/api")
 	{
+		upload := api.Group("/upload")
+		{
+			upload.POST("", uploadHandler.Upload)
+		}
+
 		vehicles := api.Group("/vehicles")
 		{
 			vehicles.POST("", vehicleHandler.Create)

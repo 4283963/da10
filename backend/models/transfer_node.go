@@ -31,6 +31,7 @@ type TransferNode struct {
 	NodeName    string     `gorm:"size:100;not null" json:"node_name"`
 	Status      NodeStatus `gorm:"size:20;default:pending" json:"status"`
 	Description string     `gorm:"size:500" json:"description"`
+	ProofImage  string     `gorm:"size:500" json:"proof_image"`
 	Operator    string     `gorm:"size:50" json:"operator"`
 	Location    string     `gorm:"size:100" json:"location"`
 	StartedAt   *time.Time `json:"started_at"`

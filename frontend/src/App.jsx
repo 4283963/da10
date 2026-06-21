@@ -10,8 +10,10 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [hasSearched, setHasSearched] = useState(false)
+  const [lastVin, setLastVin] = useState('')
 
   const handleSearch = async (vin) => {
+    setLastVin(vin)
     setLoading(true)
     setError('')
     setVehicle(null)
@@ -24,6 +26,16 @@ function App() {
       setError(typeof err === 'string' ? err : '查询失败，请稍后重试')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const refreshVehicle = async () => {
+    if (!lastVin) return
+    try {
+      const data = await vehicleAPI.getByVIN(lastVin)
+      setVehicle(data.data)
+    } catch (err) {
+      console.error('刷新数据失败:', err)
     }
   }
 
@@ -72,7 +84,11 @@ function App() {
             <VehicleInfo vehicle={vehicle} />
           </div>
 
-          <TransferTimeline nodes={vehicle.nodes} />
+          <TransferTimeline
+            nodes={vehicle.nodes}
+            vin={vehicle.vin}
+            onNodesUpdated={refreshVehicle}
+          />
 
           <ExpenseStats expenses={vehicle.expenses} />
         </>

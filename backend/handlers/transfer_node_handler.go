@@ -22,6 +22,7 @@ func NewTransferNodeHandler() *TransferNodeHandler {
 type UpdateNodeRequest struct {
 	Status      models.NodeStatus `json:"status" binding:"required,oneof=pending doing done"`
 	Description string            `json:"description"`
+	ProofImage  string            `json:"proof_image"`
 	Operator    string            `json:"operator"`
 	Location    string            `json:"location"`
 }
@@ -40,7 +41,7 @@ func (h *TransferNodeHandler) Update(c *gin.Context) {
 		return
 	}
 
-	node, err := h.service.UpdateNode(uint(id), req.Status, req.Description, req.Operator, req.Location)
+	node, err := h.service.UpdateNode(uint(id), req.Status, req.Description, req.ProofImage, req.Operator, req.Location)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

@@ -13,7 +13,7 @@ func NewTransferNodeService() *TransferNodeService {
 	return &TransferNodeService{}
 }
 
-func (s *TransferNodeService) UpdateNode(id uint, status models.NodeStatus, description, operator, location string) (*models.TransferNode, error) {
+func (s *TransferNodeService) UpdateNode(id uint, status models.NodeStatus, description, proofImage, operator, location string) (*models.TransferNode, error) {
 	var node models.TransferNode
 	if err := database.DB.First(&node, id).Error; err != nil {
 		return nil, errors.New("节点不存在")
@@ -30,6 +30,9 @@ func (s *TransferNodeService) UpdateNode(id uint, status models.NodeStatus, desc
 	node.Status = status
 	if description != "" {
 		node.Description = description
+	}
+	if proofImage != "" {
+		node.ProofImage = proofImage
 	}
 	if operator != "" {
 		node.Operator = operator
